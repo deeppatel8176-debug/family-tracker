@@ -198,15 +198,13 @@ export default function HeroLandingPage() {
               </div>
 
               <div className="pt-6 space-y-2">
-                <a
-                  href={iosUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <Link
+                  href="/ios"
                   className="w-full py-3.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm shadow-blue-200 transition-colors"
                 >
                   <ExternalLink className="w-4 h-4" />
                   <span>Launch iOS PWA Application</span>
-                </a>
+                </Link>
                 <p className="text-[11px] text-center text-slate-400">
                   Open on your iPhone and tap Add to Home Screen
                 </p>
