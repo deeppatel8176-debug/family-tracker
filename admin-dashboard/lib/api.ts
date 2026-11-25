@@ -1,4 +1,19 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+export const DEFAULT_PROD_API = 'https://family-tracker-zyr3.onrender.com';
+
+export function getApiBaseUrl(): string {
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    if (host !== 'localhost' && host !== '127.0.0.1') {
+      return DEFAULT_PROD_API;
+    }
+  }
+  return 'http://localhost:4000';
+}
+
+export const API_BASE = getApiBaseUrl();
 
 export interface AdminUser {
   id: string;

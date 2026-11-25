@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Navigation,
@@ -23,6 +23,13 @@ import {
 
 export default function HeroLandingPage() {
   const [activeTab, setActiveTab] = useState<'android' | 'ios'>('android');
+  const [iosUrl, setIosUrl] = useState('http://localhost:3001');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
+      setIosUrl(process.env.NEXT_PUBLIC_IOS_PWA_URL || 'https://family-tracker-pwa.vercel.app');
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
@@ -192,7 +199,7 @@ export default function HeroLandingPage() {
 
               <div className="pt-6 space-y-2">
                 <a
-                  href="http://localhost:3001"
+                  href={iosUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full py-3.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm shadow-blue-200 transition-colors"

@@ -1,7 +1,5 @@
 import { io, Socket } from 'socket.io-client';
-import { getTokens } from './api';
-
-const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+import { getTokens, getApiBaseUrl } from './api';
 
 let socketInstance: Socket | null = null;
 
@@ -17,8 +15,10 @@ export function getSocket(): Socket | null {
     return null;
   }
 
+  const socketUrl = getApiBaseUrl();
+
   if (!socketInstance) {
-    socketInstance = io(SOCKET_URL, {
+    socketInstance = io(socketUrl, {
       auth: { token: access },
       transports: ['websocket'],
       reconnection: true,

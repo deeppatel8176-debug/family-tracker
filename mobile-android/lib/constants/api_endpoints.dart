@@ -1,6 +1,6 @@
 class ApiEndpoints {
-  // 10.0.2.2 is the default alias for host loopback 127.0.0.1 in Android emulator
-  static const String defaultBaseUrl = 'http://10.0.2.2:4000';
+  // Production Render URL by default, works seamlessly on physical Android phones
+  static const String defaultBaseUrl = 'https://family-tracker-zyr3.onrender.com';
 
   static String baseUrl = defaultBaseUrl;
 

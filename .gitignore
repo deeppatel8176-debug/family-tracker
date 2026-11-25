@@ -21,7 +21,7 @@ build/
 # Large binary files & APKs (GitHub rejects files > 100MB)
 *.apk
 *.aab
-admin-dashboard/public/downloads/*.apk
+!admin-dashboard/public/downloads/family-tracker.apk
 
 # Flutter & Dart
 .dart_tool/
