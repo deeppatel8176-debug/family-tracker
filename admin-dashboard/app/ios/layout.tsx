@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import InstallPwaModal from '@/components/ios/InstallPwaModal';
 
 export const metadata: Metadata = {
   title: 'Family Tracker - iOS App',
@@ -21,8 +22,9 @@ export default function IosLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 pb-20">
+    <div className="min-h-screen bg-slate-50 text-slate-900 pb-20 relative">
       {children}
+      <InstallPwaModal />
     </div>
   );
 }
