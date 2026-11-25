@@ -38,14 +38,25 @@ class LocationTrackingService {
   Future<LocationPermission> requestPermission() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      _lastError = 'Location services are disabled on device';
-      return LocationPermission.denied;
+      await Geolocator.openLocationSettings();
+      serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        _lastError = 'Please enable GPS Location in your device settings';
+        return LocationPermission.denied;
+      }
     }
 
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
     }
+
+    if (permission == LocationPermission.deniedForever) {
+      _lastError = 'Location permission is permanently denied. Please allow it in App Settings.';
+      await Geolocator.openAppSettings();
+      permission = await Geolocator.checkPermission();
+    }
+
     return permission;
   }
 

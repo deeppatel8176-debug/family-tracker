@@ -1,10 +1,74 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
 import '../providers/location_provider.dart';
 import '../constants/app_colors.dart';
 
-class PermissionScreen extends StatelessWidget {
+class PermissionScreen extends StatefulWidget {
   const PermissionScreen({super.key});
+
+  @override
+  State<PermissionScreen> createState() => _PermissionScreenState();
+}
+
+class _PermissionScreenState extends State<PermissionScreen> {
+  bool _isLoading = false;
+
+  Future<void> _handleGrantPermissions(LocationProvider location) async {
+    setState(() => _isLoading = true);
+
+    try {
+      // 1. Check if device location (GPS toggle) is enabled
+      final isServiceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!isServiceEnabled) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Please turn ON Location (GPS) in phone settings.'),
+              backgroundColor: AppColors.warning,
+              duration: Duration(seconds: 4),
+            ),
+          );
+        }
+        await Geolocator.openLocationSettings();
+      }
+
+      // 2. Request permission
+      final granted = await location.requestPermission();
+
+      if (granted && mounted) {
+        Navigator.pop(context);
+        return;
+      }
+
+      // 3. If still not granted, check if denied forever
+      final permission = await Geolocator.checkPermission();
+      if ((permission == LocationPermission.deniedForever || permission == LocationPermission.denied) && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Permission needed. Please allow Location in App Settings.'),
+            action: SnackBarAction(
+              label: 'Settings',
+              textColor: Colors.yellow,
+              onPressed: () => Geolocator.openAppSettings(),
+            ),
+            backgroundColor: AppColors.danger,
+            duration: const Duration(seconds: 6),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.danger),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -70,19 +134,20 @@ class PermissionScreen extends StatelessWidget {
             ),
             const Spacer(),
             ElevatedButton(
-              onPressed: () async {
-                final granted = await location.requestPermission();
-                if (granted && context.mounted) {
-                  Navigator.pop(context);
-                }
-              },
+              onPressed: _isLoading ? null : () => _handleGrantPermissions(location),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
-              child: const Text('Grant Permissions', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              child: _isLoading
+                  ? const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                    )
+                  : const Text('Grant Permissions', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             ),
           ],
         ),
