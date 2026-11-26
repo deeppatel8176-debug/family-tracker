@@ -125,7 +125,7 @@ export default function MembersPage() {
           subtitle="Manage authorized member accounts, invitations and device statuses"
         />
 
-        <main className="p-8 space-y-6 flex-1 overflow-y-auto">
+        <main className="p-4 sm:p-8 pb-24 lg:pb-8 space-y-6 flex-1 overflow-y-auto">
           {/* Top Action Bar */}
           <div className="flex items-center justify-between">
             <div>
@@ -150,12 +150,12 @@ export default function MembersPage() {
             <table className="w-full text-left text-xs">
               <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase font-semibold">
                 <tr>
-                  <th className="py-3.5 px-6">Member</th>
-                  <th className="py-3.5 px-6">Role & Status</th>
-                  <th className="py-3.5 px-6">Relationship</th>
-                  <th className="py-3.5 px-6">Device Info</th>
-                  <th className="py-3.5 px-6">Location Sharing</th>
-                  <th className="py-3.5 px-6 text-right">Actions</th>
+                  <th className="py-3.5 px-4 sm:px-6">Member</th>
+                  <th className="py-3.5 px-4 sm:px-6 hidden sm:table-cell">Role & Status</th>
+                  <th className="py-3.5 px-4 sm:px-6 hidden md:table-cell">Relationship</th>
+                  <th className="py-3.5 px-4 sm:px-6 hidden lg:table-cell">Device Info</th>
+                  <th className="py-3.5 px-4 sm:px-6">Location</th>
+                  <th className="py-3.5 px-4 sm:px-6 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -173,19 +173,19 @@ export default function MembersPage() {
 
                     return (
                       <tr key={m._id} className="hover:bg-slate-50/80 transition-colors">
-                        <td className="py-4 px-6">
+                        <td className="py-4 px-4 sm:px-6">
                           <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-xl bg-slate-100 text-slate-700 font-bold flex items-center justify-center text-xs">
+                            <div className="w-9 h-9 rounded-xl bg-slate-100 text-slate-700 font-bold flex items-center justify-center text-xs flex-shrink-0">
                               {m.name?.[0]?.toUpperCase() || 'M'}
                             </div>
                             <div>
                               <p className="font-semibold text-slate-900">{m.name}</p>
-                              <p className="text-[11px] text-slate-400">{m.email}</p>
+                              <p className="text-[11px] text-slate-400 hidden sm:block">{m.email}</p>
                             </div>
                           </div>
                         </td>
 
-                        <td className="py-4 px-6">
+                        <td className="py-4 px-4 sm:px-6 hidden sm:table-cell">
                           <div className="space-y-1">
                             <span className="inline-block px-2 py-0.5 rounded-full bg-slate-100 font-semibold text-[10px] text-slate-700 uppercase">
                               {m.role}
@@ -208,11 +208,11 @@ export default function MembersPage() {
                           </div>
                         </td>
 
-                        <td className="py-4 px-6 text-slate-600 font-medium">
+                        <td className="py-4 px-4 sm:px-6 text-slate-600 font-medium hidden md:table-cell">
                           {m.relationship || 'Member'}
                         </td>
 
-                        <td className="py-4 px-6 text-slate-500">
+                        <td className="py-4 px-4 sm:px-6 text-slate-500 hidden lg:table-cell">
                           {m.device ? (
                             <div>
                               <p className="font-semibold text-slate-700">{m.device.deviceName}</p>
@@ -223,11 +223,12 @@ export default function MembersPage() {
                           )}
                         </td>
 
-                        <td className="py-4 px-6">
+                        <td className="py-4 px-4 sm:px-6">
                           {loc && loc.sharingStatus === 'active' ? (
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 font-semibold text-[11px]">
                               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                              Active
+                              <span className="hidden sm:inline">Active</span>
+                              <span className="sm:hidden">On</span>
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 font-medium text-[11px]">
@@ -236,7 +237,7 @@ export default function MembersPage() {
                           )}
                         </td>
 
-                        <td className="py-4 px-6 text-right space-x-2">
+                        <td className="py-4 px-4 sm:px-6 text-right space-x-1 sm:space-x-2">
                           {m.role !== 'admin' && (
                             <>
                               <button

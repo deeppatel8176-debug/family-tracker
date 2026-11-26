@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { Users, ShieldCheck, ChevronDown, ChevronUp } from 'lucide-react';
 import { SelectedMember } from './MemberDetailDrawer';
 
 export interface SafeZone {
@@ -37,11 +38,19 @@ export default function GoogleMapWrapper({
   const geofenceCirclesRef = useRef<{ [key: string]: any }>({});
   const [isMapReady, setIsMapReady] = useState(false);
   const [activeTab, setActiveTab] = useState<'members' | 'zones'>('members');
+  const [isListExpanded, setIsListExpanded] = useState(false);
 
   const sharingMembers = members.filter((m) => m.latitude && m.longitude);
   const activeFences = geofences.filter(
     (g) => typeof g.latitude === 'number' && typeof g.longitude === 'number' && !isNaN(g.latitude) && !isNaN(g.longitude)
   );
+
+  // Auto-expand list only on large desktop screens on first load
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
+      setIsListExpanded(true);
+    }
+  }, []);
 
   // Initialize Leaflet Map
   useEffect(() => {
@@ -335,7 +344,6 @@ export default function GoogleMapWrapper({
           geofenceMarkersRef.current[selectedGeofenceId].openPopup();
         }
       } else if (sharingMembers.length === 0 && activeFences.length > 0) {
-        // If no members are sharing, fit bounds to the safe zones
         const bounds = L.latLngBounds(activeFences.map((g) => [g.latitude, g.longitude]));
         map.fitBounds(bounds, { padding: [60, 60], maxZoom: 15 });
       }
@@ -343,127 +351,164 @@ export default function GoogleMapWrapper({
   }, [isMapReady, geofences, selectedGeofenceId, onSelectGeofence]);
 
   return (
-    <div className="relative w-full h-full min-h-[580px] rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 shadow-sm">
+    <div className="relative w-full h-full min-h-[460px] sm:min-h-[580px] rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 shadow-sm">
       {/* Real Interactive Leaflet Map Container */}
       <div ref={mapContainerRef} className="w-full h-full absolute inset-0 z-0" />
 
-      {/* Floating Active Elements Drawer */}
-      <div className="absolute top-4 left-4 z-10 flex flex-col gap-2 max-w-xs w-72">
-        <div className="bg-white/95 backdrop-blur-md p-3 rounded-2xl border border-slate-200 shadow-md">
-          {/* Tabs */}
-          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl mb-2.5 text-xs font-semibold">
-            <button
-              onClick={() => setActiveTab('members')}
-              className={`flex-1 py-1 px-2 rounded-lg transition-all text-center ${
-                activeTab === 'members'
-                  ? 'bg-white text-slate-900 shadow-xs'
-                  : 'text-slate-500 hover:text-slate-700'
-              }`}
-            >
-              Members ({members.length})
-            </button>
-            <button
-              onClick={() => setActiveTab('zones')}
-              className={`flex-1 py-1 px-2 rounded-lg transition-all text-center ${
-                activeTab === 'zones'
-                  ? 'bg-emerald-600 text-white shadow-xs'
-                  : 'text-slate-500 hover:text-slate-700'
-              }`}
-            >
-              Safe Zones ({activeFences.length})
-            </button>
-          </div>
-
-          {activeTab === 'members' ? (
-            <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
-              {members.length === 0 ? (
-                <p className="text-xs text-slate-400 py-2 text-center">No members registered yet.</p>
-              ) : (
-                members.map((m) => {
-                  const isSelected = selectedMemberId === (m.userId || m.id);
-                  const isSharing = m.sharingStatus === 'active';
-                  const isStale = m.isStale;
-
-                  return (
-                    <button
-                      key={m.userId || m.id}
-                      onClick={() => onSelectMember(m)}
-                      className={`w-full flex items-center justify-between p-2 rounded-xl text-left text-xs transition-all ${
-                        isSelected
-                          ? 'bg-blue-600 text-white font-bold shadow-sm'
-                          : 'bg-slate-50 hover:bg-slate-100 text-slate-800'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2 truncate">
-                        <span
-                          className={`w-2.5 h-2.5 rounded-full shrink-0 ${
-                            isSharing
-                              ? isStale
-                                ? 'bg-amber-400 ring-2 ring-amber-200'
-                                : 'bg-emerald-500 ring-2 ring-emerald-200 animate-pulse'
-                              : 'bg-slate-300'
-                          }`}
-                        />
-                        <span className="truncate">{m.name}</span>
-                      </div>
-                      <span className="text-[10px] opacity-80 shrink-0 ml-2">
-                        {isSharing ? (isStale ? 'Stale' : 'Live') : 'Off'}
-                      </span>
-                    </button>
-                  );
-                })
-              )}
+      {/* Floating Active Elements Drawer (Mobile Responsive) */}
+      <div className="absolute top-3 left-3 z-10 flex flex-col gap-2 max-w-[calc(100vw-24px)] sm:w-72">
+        {!isListExpanded ? (
+          <button
+            onClick={() => setIsListExpanded(true)}
+            className="bg-white/95 backdrop-blur-md px-3 py-2 rounded-xl border border-slate-200 shadow-md text-xs font-bold text-slate-800 flex items-center gap-2 hover:bg-slate-50 transition-all"
+          >
+            <span className="flex items-center gap-1 text-blue-600">
+              <Users className="w-3.5 h-3.5" />
+              <span>{members.length} Members</span>
+            </span>
+            <span className="text-slate-300">|</span>
+            <span className="flex items-center gap-1 text-emerald-600">
+              <span>🛡️ {activeFences.length} Zones</span>
+            </span>
+            <ChevronDown className="w-3.5 h-3.5 text-slate-400 ml-0.5" />
+          </button>
+        ) : (
+          <div className="bg-white/95 backdrop-blur-md p-3 rounded-2xl border border-slate-200 shadow-xl w-72 max-w-[calc(100vw-24px)] animate-in fade-in zoom-in-95 duration-150">
+            {/* Header with Minimize Button */}
+            <div className="flex items-center justify-between mb-2 pb-1 border-b border-slate-100">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Map Elements</p>
+              <button
+                onClick={() => setIsListExpanded(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                title="Collapse list"
+              >
+                <ChevronUp className="w-4 h-4" />
+              </button>
             </div>
-          ) : (
-            <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
-              {activeFences.length === 0 ? (
-                <div className="text-center py-3 text-xs text-slate-400 space-y-1">
-                  <p>No Safe Zones configured.</p>
-                  <p className="text-[10px] text-slate-500">Go to Safe Zones page to create one.</p>
-                </div>
-              ) : (
-                activeFences.map((zone) => {
-                  const isSelected = selectedGeofenceId === zone._id;
-                  return (
-                    <button
-                      key={zone._id}
-                      onClick={() => {
-                        if (onSelectGeofence) onSelectGeofence(zone);
-                        if (mapInstanceRef.current && geofenceMarkersRef.current[zone._id]) {
-                          mapInstanceRef.current.flyTo([zone.latitude, zone.longitude], 16, { animate: true });
-                          geofenceMarkersRef.current[zone._id].openPopup();
-                        }
-                      }}
-                      className={`w-full flex items-center justify-between p-2 rounded-xl text-left text-xs transition-all ${
-                        isSelected
-                          ? 'bg-emerald-600 text-white font-bold shadow-sm'
-                          : 'bg-emerald-50/70 hover:bg-emerald-100/70 text-emerald-900 border border-emerald-100'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2 truncate">
-                        <span className="text-sm shrink-0">🛡️</span>
-                        <div className="truncate">
-                          <p className="truncate font-semibold">{zone.name}</p>
-                          <p className="text-[10px] opacity-75">{zone.radius}m perimeter</p>
+
+            {/* Tabs */}
+            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl mb-2 text-xs font-semibold">
+              <button
+                onClick={() => setActiveTab('members')}
+                className={`flex-1 py-1 px-2 rounded-lg transition-all text-center ${
+                  activeTab === 'members'
+                    ? 'bg-white text-slate-900 shadow-xs'
+                    : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                Members ({members.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('zones')}
+                className={`flex-1 py-1 px-2 rounded-lg transition-all text-center ${
+                  activeTab === 'zones'
+                    ? 'bg-emerald-600 text-white shadow-xs'
+                    : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                Safe Zones ({activeFences.length})
+              </button>
+            </div>
+
+            {activeTab === 'members' ? (
+              <div className="space-y-1.5 max-h-48 sm:max-h-56 overflow-y-auto pr-1">
+                {members.length === 0 ? (
+                  <p className="text-xs text-slate-400 py-2 text-center">No members registered yet.</p>
+                ) : (
+                  members.map((m) => {
+                    const isSelected = selectedMemberId === (m.userId || m.id);
+                    const isSharing = m.sharingStatus === 'active';
+                    const isStale = m.isStale;
+
+                    return (
+                      <button
+                        key={m.userId || m.id}
+                        onClick={() => {
+                          onSelectMember(m);
+                          if (typeof window !== 'undefined' && window.innerWidth < 640) {
+                            setIsListExpanded(false);
+                          }
+                        }}
+                        className={`w-full flex items-center justify-between p-2 rounded-xl text-left text-xs transition-all ${
+                          isSelected
+                            ? 'bg-blue-600 text-white font-bold shadow-sm'
+                            : 'bg-slate-50 hover:bg-slate-100 text-slate-800'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 truncate">
+                          <span
+                            className={`w-2.5 h-2.5 rounded-full shrink-0 ${
+                              isSharing
+                                ? isStale
+                                  ? 'bg-amber-400 ring-2 ring-amber-200'
+                                  : 'bg-emerald-500 ring-2 ring-emerald-200 animate-pulse'
+                                : 'bg-slate-300'
+                            }`}
+                          />
+                          <span className="truncate">{m.name}</span>
                         </div>
-                      </div>
-                      <span className="text-[10px] uppercase font-bold shrink-0 opacity-75">
-                        Focus
-                      </span>
-                    </button>
-                  );
-                })
-              )}
-            </div>
-          )}
-        </div>
+                        <span className="text-[10px] opacity-80 shrink-0 ml-2">
+                          {isSharing ? (isStale ? 'Stale' : 'Live') : 'Off'}
+                        </span>
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            ) : (
+              <div className="space-y-1.5 max-h-48 sm:max-h-56 overflow-y-auto pr-1">
+                {activeFences.length === 0 ? (
+                  <div className="text-center py-3 text-xs text-slate-400 space-y-1">
+                    <p>No Safe Zones configured.</p>
+                    <p className="text-[10px] text-slate-500">Go to Safe Zones page to create one.</p>
+                  </div>
+                ) : (
+                  activeFences.map((zone) => {
+                    const isSelected = selectedGeofenceId === zone._id;
+                    return (
+                      <button
+                        key={zone._id}
+                        onClick={() => {
+                          if (onSelectGeofence) onSelectGeofence(zone);
+                          if (mapInstanceRef.current && geofenceMarkersRef.current[zone._id]) {
+                            mapInstanceRef.current.flyTo([zone.latitude, zone.longitude], 16, { animate: true });
+                            geofenceMarkersRef.current[zone._id].openPopup();
+                          }
+                          if (typeof window !== 'undefined' && window.innerWidth < 640) {
+                            setIsListExpanded(false);
+                          }
+                        }}
+                        className={`w-full flex items-center justify-between p-2 rounded-xl text-left text-xs transition-all ${
+                          isSelected
+                            ? 'bg-emerald-600 text-white font-bold shadow-sm'
+                            : 'bg-emerald-50/70 hover:bg-emerald-100/70 text-emerald-900 border border-emerald-100'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 truncate">
+                          <span className="text-sm shrink-0">🛡️</span>
+                          <div className="truncate">
+                            <p className="truncate font-semibold">{zone.name}</p>
+                            <p className="text-[10px] opacity-75">{zone.radius}m perimeter</p>
+                          </div>
+                        </div>
+                        <span className="text-[10px] uppercase font-bold shrink-0 opacity-75">
+                          Focus
+                        </span>
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* Status Legend Floating Bottom-Left */}
-      <div className="absolute bottom-4 left-4 z-10 bg-white/95 backdrop-blur-md px-3.5 py-2 rounded-xl border border-slate-200 shadow-sm flex flex-wrap items-center gap-4 text-xs font-medium text-slate-700">
+      {/* Status Legend Floating Bottom-Left (Hidden on small mobile to avoid map clash) */}
+      <div className="hidden sm:flex absolute bottom-4 left-4 z-10 bg-white/95 backdrop-blur-md px-3.5 py-2 rounded-xl border border-slate-200 shadow-sm flex-wrap items-center gap-3 text-xs font-medium text-slate-700">
         <div className="flex items-center gap-1.5">
           <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-          <span>Sharing Live</span>
+          <span>Live</span>
         </div>
         <div className="flex items-center gap-1.5">
           <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
@@ -471,7 +516,7 @@ export default function GoogleMapWrapper({
         </div>
         <div className="flex items-center gap-1.5">
           <span className="w-2.5 h-2.5 rounded-full bg-slate-400" />
-          <span>Off / Paused</span>
+          <span>Off</span>
         </div>
         <div className="flex items-center gap-1.5 border-l border-slate-200 pl-3">
           <span className="text-emerald-600 font-bold">🛡️</span>

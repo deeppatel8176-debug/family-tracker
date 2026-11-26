@@ -59,7 +59,7 @@ export default function NotificationsPage() {
           subtitle="Audit log of safe zone arrivals, emergency triggers and sharing updates"
         />
 
-        <main className="p-8 space-y-6 flex-1 overflow-y-auto">
+        <main className="p-4 sm:p-8 pb-24 lg:pb-8 space-y-6 flex-1 overflow-y-auto">
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-3">
             <h2 className="text-sm font-bold text-slate-900">Activity Log</h2>
 

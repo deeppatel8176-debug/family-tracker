@@ -88,7 +88,7 @@ export default function OverviewPage() {
           activeSosCount={stats?.activeSosAlerts || 0}
         />
 
-        <main className="p-8 space-y-8 flex-1 overflow-y-auto">
+        <main className="p-4 sm:p-8 pb-24 lg:pb-8 space-y-8 flex-1 overflow-y-auto">
           {/* 6 Core Stat Cards */}
           <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
             <StatCard

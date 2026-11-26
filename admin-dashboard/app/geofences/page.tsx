@@ -127,7 +127,7 @@ export default function GeofencesPage() {
           subtitle="Configure perimeter boundaries for automatic arrival and departure alerts"
         />
 
-        <main className="p-8 space-y-6 flex-1 overflow-y-auto">
+        <main className="p-4 sm:p-8 pb-24 lg:pb-8 space-y-6 flex-1 overflow-y-auto">
           {/* Action Bar */}
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>

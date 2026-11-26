@@ -59,7 +59,7 @@ export default function SettingsPage() {
           subtitle="Configure location data retention, stale pulse thresholds & privacy controls"
         />
 
-        <main className="p-8 space-y-6 flex-1 overflow-y-auto max-w-4xl">
+        <main className="p-4 sm:p-8 pb-24 lg:pb-8 space-y-6 flex-1 overflow-y-auto max-w-4xl">
           <form onSubmit={handleSave} className="space-y-6">
             {saved && (
               <div className="p-3 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-semibold flex items-center gap-2">
