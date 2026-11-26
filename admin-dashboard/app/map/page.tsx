@@ -2,10 +2,10 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, RefreshCw, Filter, Layers } from 'lucide-react';
+import { Search, RefreshCw, ShieldCheck, MapPin } from 'lucide-react';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
-import GoogleMapWrapper from '@/components/GoogleMapWrapper';
+import GoogleMapWrapper, { SafeZone } from '@/components/GoogleMapWrapper';
 import MemberDetailDrawer, { SelectedMember } from '@/components/MemberDetailDrawer';
 import { fetchWithAuth, getAdminUser } from '@/lib/api';
 import { getAdminSocket } from '@/lib/socket';
@@ -13,6 +13,9 @@ import { getAdminSocket } from '@/lib/socket';
 export default function MapPage() {
   const router = useRouter();
   const [members, setMembers] = useState<SelectedMember[]>([]);
+  const [geofences, setGeofences] = useState<SafeZone[]>([]);
+  const [showSafeZones, setShowSafeZones] = useState(true);
+  const [selectedGeofence, setSelectedGeofence] = useState<SafeZone | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterMode, setFilterMode] = useState<'all' | 'sharing' | 'stale'>('all');
   const [selectedMember, setSelectedMember] = useState<SelectedMember | null>(null);
@@ -25,7 +28,7 @@ export default function MapPage() {
       return;
     }
 
-    loadLocations();
+    loadData();
 
     const socket = getAdminSocket();
     if (socket) {
@@ -42,9 +45,11 @@ export default function MapPage() {
         });
       });
 
-      socket.on('member:sharing-status', () => loadLocations());
-      socket.on('member:online', () => loadLocations());
-      socket.on('member:offline', () => loadLocations());
+      socket.on('member:sharing-status', () => loadData());
+      socket.on('member:online', () => loadData());
+      socket.on('member:offline', () => loadData());
+      socket.on('geofence:created', () => loadData());
+      socket.on('geofence:deleted', () => loadData());
     }
 
     return () => {
@@ -53,17 +58,27 @@ export default function MapPage() {
         socket.off('member:sharing-status');
         socket.off('member:online');
         socket.off('member:offline');
+        socket.off('geofence:created');
+        socket.off('geofence:deleted');
       }
     };
   }, [router]);
 
-  const loadLocations = async () => {
+  const loadData = async () => {
     setLoading(true);
     try {
-      const res = await fetchWithAuth('/api/locations/current');
-      if (res.ok) {
-        const data = await res.json();
+      const [membersRes, fencesRes] = await Promise.all([
+        fetchWithAuth('/api/locations/current'),
+        fetchWithAuth('/api/geofences'),
+      ]);
+
+      if (membersRes.ok) {
+        const data = await membersRes.json();
         setMembers(data);
+      }
+      if (fencesRes.ok) {
+        const fenceData = await fencesRes.json();
+        setGeofences(fenceData);
       }
     } catch (e) {
       console.error(e);
@@ -93,7 +108,7 @@ export default function MapPage() {
       <div className="flex-1 flex flex-col min-w-0">
         <Header
           title="Live Family Map"
-          subtitle="Real-time voluntary GPS positions with accuracy radii & stale detection"
+          subtitle="Real-time voluntary GPS positions with safe zones & stale detection"
         />
 
         <main className="p-8 space-y-4 flex-1 flex flex-col">
@@ -137,11 +152,25 @@ export default function MapPage() {
                   Stale
                 </button>
               </div>
+
+              {/* Safe Zone Toggle Button */}
+              <button
+                onClick={() => setShowSafeZones((prev) => !prev)}
+                className={`px-3 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                  showSafeZones
+                    ? 'bg-emerald-50 border-emerald-300 text-emerald-800 shadow-xs'
+                    : 'bg-white border-slate-200 text-slate-400 hover:text-slate-600'
+                }`}
+                title="Toggle Safe Zones on Map"
+              >
+                <ShieldCheck className={`w-3.5 h-3.5 ${showSafeZones ? 'text-emerald-600' : 'text-slate-400'}`} />
+                <span>Safe Zones ({geofences.length})</span>
+              </button>
             </div>
 
             <div className="flex items-center gap-2">
               <button
-                onClick={loadLocations}
+                onClick={loadData}
                 className="px-3.5 py-1.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-1.5 transition-colors"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
@@ -154,8 +183,17 @@ export default function MapPage() {
           <div className="flex-1 relative min-h-[600px]">
             <GoogleMapWrapper
               members={filteredMembers}
-              onSelectMember={(m) => setSelectedMember(m)}
+              geofences={showSafeZones ? geofences : []}
+              onSelectMember={(m) => {
+                setSelectedMember(m);
+                setSelectedGeofence(null);
+              }}
               selectedMemberId={selectedMember?.userId || selectedMember?.id}
+              onSelectGeofence={(z) => {
+                setSelectedGeofence(z);
+                setSelectedMember(null);
+              }}
+              selectedGeofenceId={selectedGeofence?._id}
             />
           </div>
         </main>

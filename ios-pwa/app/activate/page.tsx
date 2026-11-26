@@ -4,9 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { KeyRound, Lock, ArrowRight } from 'lucide-react';
-import { setTokens, setUser } from '@/lib/api';
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+import { setTokens, setUser, getApiBaseUrl } from '@/lib/api';
 
 export default function ActivatePage() {
   const router = useRouter();
@@ -27,7 +25,8 @@ export default function ActivatePage() {
     setError(null);
 
     try {
-      const res = await fetch(`${API_BASE}/api/members/activate-account`, {
+      const apiBase = getApiBaseUrl();
+      const res = await fetch(`${apiBase}/api/members/activate-account`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

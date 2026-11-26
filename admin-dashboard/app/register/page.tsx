@@ -4,9 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ShieldCheck, Mail, Lock, User, Home, ArrowRight } from 'lucide-react';
-import { setTokens, setAdminUser } from '@/lib/api';
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+import { setTokens, setAdminUser, getApiBaseUrl } from '@/lib/api';
 
 export default function AdminRegisterPage() {
   const router = useRouter();
@@ -23,7 +21,8 @@ export default function AdminRegisterPage() {
     setError(null);
 
     try {
-      const res = await fetch(`${API_BASE}/api/auth/admin/register`, {
+      const apiBase = getApiBaseUrl();
+      const res = await fetch(`${apiBase}/api/auth/admin/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

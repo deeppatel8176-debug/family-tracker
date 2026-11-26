@@ -4,9 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ShieldCheck, Mail, Lock, ArrowRight } from 'lucide-react';
-import { setTokens, setAdminUser } from '@/lib/api';
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+import { setTokens, setAdminUser, getApiBaseUrl } from '@/lib/api';
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -21,7 +19,8 @@ export default function AdminLoginPage() {
     setError(null);
 
     try {
-      const res = await fetch(`${API_BASE}/api/auth/admin/login`, {
+      const apiBase = getApiBaseUrl();
+      const res = await fetch(`${apiBase}/api/auth/admin/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email.trim(), password }),
