@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:battery_plus/battery_plus.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -76,11 +77,26 @@ class LocationTrackingService {
       // Initial fix
       await _fetchAndSendPosition();
 
-      // Configure location stream (Active: every 10-15s or 10m movement)
-      const locationSettings = LocationSettings(
-        accuracy: LocationAccuracy.high,
-        distanceFilter: 10,
-      );
+      // Configure location stream with Android Foreground Service for 24/7 background tracking
+      late LocationSettings locationSettings;
+      if (defaultTargetPlatform == TargetPlatform.android) {
+        locationSettings = AndroidSettings(
+          accuracy: LocationAccuracy.high,
+          distanceFilter: 10,
+          forceLocationManager: false,
+          intervalDuration: const Duration(seconds: 15),
+          foregroundNotificationConfig: const ForegroundNotificationConfig(
+            notificationTitle: "Family Tracker • Location Sharing Active",
+            notificationText: "Voluntarily sharing live GPS position with family administrator.",
+            enableWakeLock: true,
+          ),
+        );
+      } else {
+        locationSettings = const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          distanceFilter: 10,
+        );
+      }
 
       _positionStreamSub = Geolocator.getPositionStream(locationSettings: locationSettings).listen(
         (Position position) {
